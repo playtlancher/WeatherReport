@@ -1,19 +1,14 @@
 package com.company;
 
-import java.awt.Color;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Insets;
-import java.awt.RenderingHints;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
-import javax.swing.JTextField;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
+import org.geonames.*;
 import org.jdesktop.animation.timing.Animator;
 import org.jdesktop.animation.timing.TimingTarget;
 import org.jdesktop.animation.timing.TimingTargetAdapter;
@@ -27,7 +22,7 @@ public class TextField extends JTextField {
     private Color lineColor = new Color(3, 155, 216);
     private String labelText = "WORK!!!";
     private boolean mouseOver = false;
-
+    private JFrame jFrame;
 
     public void setLineColor(Color lineColor) {
         this.lineColor = lineColor;
@@ -166,5 +161,92 @@ public class TextField extends JTextField {
             showing(string.equals(""));
         }
         super.setText(string);
+    }
+
+    public void suggestion() {
+        WebService.setUserName("razanka");
+        ToponymSearchCriteria searchCriteria = new ToponymSearchCriteria();
+
+        try {
+            searchCriteria.setFeatureClass(FeatureClass.fromValue("P"));
+            searchCriteria.setCountryCode("UA");
+            searchCriteria.setMaxRows(1000);
+        } catch (InvalidParameterException e) {
+            e.printStackTrace();
+        }
+
+        List<String> suggestions = new ArrayList<>();
+
+        try {
+            ToponymSearchResult searchResult = WebService.search(searchCriteria);
+
+            for (Toponym toponym : searchResult.getToponyms()) {
+                suggestions.add(toponym.getName());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        JPanel suggestionPanel = new JPanel();
+        suggestionPanel.setLayout(new BorderLayout());
+        suggestionPanel.setVisible(false);
+
+        JList<String> suggestionList = new JList<>(suggestions.toArray(new String[0]));
+        suggestionList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        suggestionList.setVisibleRowCount(5);
+
+        JScrollPane scrollPane = new JScrollPane(suggestionList);
+        suggestionPanel.add(scrollPane);
+
+        this.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                SwingUtilities.invokeLater(() -> {
+                    String text = getText().toLowerCase();
+                    List<String> filteredSuggestions = new ArrayList<>();
+                    for (String suggestion : suggestions) {
+                        if (suggestion.toLowerCase().startsWith(text)) {
+                            filteredSuggestions.add(suggestion);
+                        }
+                    }
+                    if (filteredSuggestions.isEmpty()) {
+                        suggestionPanel.setVisible(false);
+                    } else {
+                        suggestionList.setListData(filteredSuggestions.toArray(new String[0]));
+                        suggestionPanel.setVisible(true);
+                    }
+                });
+            }
+        });
+
+        suggestionList.addListSelectionListener(e -> {
+            if (!suggestionList.isSelectionEmpty()) {
+                String selectedSuggestion = suggestionList.getSelectedValue();
+                this.setText(selectedSuggestion);
+                suggestionPanel.setVisible(false);
+            }
+        });
+
+        suggestionPanel.setBounds(200, 40, 170, 100);
+        addFocusListener(new FocusAdapter() {
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                suggestionPanel.setVisible(true);
+                revalidate();
+                repaint();
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                suggestionPanel.setVisible(false);
+            }
+        });
+        jFrame.add(suggestionPanel);
+    }
+
+    public void setjFrame(JFrame jFrame) {
+        this.jFrame = jFrame;
+        suggestion();
     }
 }

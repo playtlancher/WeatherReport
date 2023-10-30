@@ -7,7 +7,6 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.JButton;
-import javax.swing.border.EmptyBorder;
 
 import org.jdesktop.animation.timing.Animator;
 import org.jdesktop.animation.timing.TimingTarget;
@@ -18,7 +17,6 @@ public class Button extends JButton {
     private final Animator animator;
     private float location;
     private boolean show;
-    private boolean animateHinText = true;
     private Color lineColor = new Color(3, 155, 216);
     private boolean mouseOver;
 
@@ -69,10 +67,6 @@ public class Button extends JButton {
                 repaint();
             }
 
-            @Override
-            public void begin() {
-                animateHinText = getText().equals("");
-            }
         };
         animator = new Animator(300, target);
         animator.setResolution(0);

@@ -7,7 +7,7 @@ class MyDialog extends JDialog {
     public MyDialog() throws IOException {
         File file = new File("Settings.txt");
         BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
-
+        WeatherParser parser = new WeatherParser();
 
         String readLine;
         String city = "";
@@ -25,7 +25,7 @@ class MyDialog extends JDialog {
         JLabel cityNow = new JLabel("City now:");
         JLabel cityNowText = new JLabel(city);
 
-        changeCityField.setLabelText("Enter city");
+        changeCityField.setLabelText("City");
 
         button.setBounds(50, 110, 120, 30);
         changeCityField.setBounds(50, 50, 80, 50);
@@ -35,15 +35,20 @@ class MyDialog extends JDialog {
 
         button.addActionListener(e -> {
             String city1 = changeCityField.getText();
+            while (true) {
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                    parser.parse(LinkBuilder.getParameters(city1, "1", "3dd7434243bb4e06933153229230509"));
+                    cityNowText.setText(city1);
+                    city1 = "City: " + city1;
+                    writer.write(city1);
+                    break;
 
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-                city1 = "City: " + city1;
-                writer.write(city1);
-                dispose();
-
-            } catch (IOException ex) {
-                String message = "Таке місто не існує";
-                JOptionPane.showMessageDialog(null, message, "Output", JOptionPane.PLAIN_MESSAGE);
+                } catch (IOException ex) {
+                    JTextField text = new JTextField("Таке місто не існує");
+                    text.setBounds(50, 150, 120, 30);
+                    add(text);
+                    break;
+                }
             }
         });
 
@@ -57,7 +62,8 @@ class MyDialog extends JDialog {
 
         add(cityNowText);
 
-        setBounds(500, 500, 200, 200);
+        setBounds(500, 500, 300, 300);
 
+        repaint();
     }
 }
