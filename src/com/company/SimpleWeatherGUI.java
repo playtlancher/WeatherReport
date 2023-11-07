@@ -13,14 +13,14 @@ import java.util.List;
 
 public class SimpleWeatherGUI extends JFrame {
 
-    private final JButton button = new JButton("Weather Report");
+    private final JButton weatherReportButton = new JButton("Weather Report");
     private final TextField inputCity = new TextField();
     private final TextField inputDays = new TextField();
 
     Font fontCity = new Font("Times new roman", Font.BOLD, 80);
 
     List<JButton> createdButtons = new ArrayList<>();
-    List<JLabel> createdLabel = new ArrayList<>();
+    List<JLabel> createdLabels = new ArrayList<>();
 
     public SimpleWeatherGUI() throws IOException {
 
@@ -51,29 +51,26 @@ public class SimpleWeatherGUI extends JFrame {
             }
         }
 
-        List<WeatherInfo> objects = parser.parse(LinkBuilder.getParameters(city, "1", "3dd7434243bb4e06933153229230509"));
-        ButtonEventListenerWeather belw = new ButtonEventListenerWeather(this, createdButtons, createdLabel, objects.get(0));
-
+        List<WeatherInfo> weatherList = parser.parseWeather(LinkBuilder.buildLink(city, "1", "3dd7434243bb4e06933153229230509"));
+        ButtonEventListenerWeather belw = new ButtonEventListenerWeather(this, createdButtons, createdLabels, weatherList.get(0));
         belw.actionPerformed(null);
 
-        URL url = new URL("https://th.bing.com/th/id/OIP.bcoOPeHwEPWzLWzNQjJlrAHaHa?pid=ImgDet&rs=1");
-        ImageIcon icon = new ImageIcon(url);
-        Image img = icon.getImage();
-        Image newImg = img.getScaledInstance(20, 20, Image.SCALE_SMOOTH);
-        ImageIcon newIcon = new ImageIcon(newImg);
 
+        //Create settings icon
+        URL settingsImageUrl = new URL("https://th.bing.com/th/id/OIP.bcoOPeHwEPWzLWzNQjJlrAHaHa?pid=ImgDet&rs=1");
+        ImageIcon settingsIcon = new ImageIcon(settingsImageUrl);
+        Image settingsImage = settingsIcon.getImage();
+        Image finalImage = settingsImage.getScaledInstance(20, 20, Image.SCALE_SMOOTH);
+        ImageIcon newIcon = new ImageIcon(finalImage);
 
+        //Create menu bar
         JMenuBar jMenuBar = new JMenuBar();
         JMenu menu = new JMenu();
         menu.setIcon(newIcon);
         JMenuItem settings = new JMenuItem("Settings");
         settings.addActionListener(e -> {
-            try {
-                MyDialog myDialog = new MyDialog();
-                myDialog.setVisible(true);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            SettingsDialog myDialog = new SettingsDialog(finalImage);
+            myDialog.setVisible(true);
         });
 
 
@@ -90,44 +87,38 @@ public class SimpleWeatherGUI extends JFrame {
 
         final JLabel cityText = new JLabel();
         cityText.setText(city);
-        createdLabel.add(cityText);
+        createdLabels.add(cityText);
 
 
         inputCity.setBounds(200, 0, 100, 40);
         inputDays.setBounds(400, 0, 100, 40);
-        button.setBounds(250, 50, 200, 20);
+        weatherReportButton.setBounds(250, 50, 200, 20);
         cityText.setBounds(250, 80, 200, 70);
         cityText.setFont(fontCity);
 
-        button.addActionListener(new ButtonEventListener(this));
+        weatherReportButton.addActionListener(new ButtonEventListener(this));
 
         container.add(inputCity);
         container.add(inputDays);
-        container.add(button);
+        container.add(weatherReportButton);
         container.add(cityText);
 
         setLayout(null);
     }
 
     public void clearWindow() {
-        for (JButton jButton : createdButtons) {
-
-            getContentPane().remove(jButton);
-        }
-        for (JLabel label : createdLabel) {
-
-            getContentPane().remove(label);
-        }
-        createdLabel.clear();
+        for (JButton jButton : createdButtons) {getContentPane().remove(jButton);}
+        for (JLabel label : createdLabels) {getContentPane().remove(label);}
+        createdLabels.clear();
         createdButtons.clear();
         revalidate();
         repaint();
     }
 
     class ButtonEventListener implements ActionListener {
+
         String key = "3dd7434243bb4e06933153229230509";
         WeatherParser weatherParser = new WeatherParser();
-
         JFrame jFrame;
 
         public ButtonEventListener(JFrame jFrame) {
@@ -136,7 +127,7 @@ public class SimpleWeatherGUI extends JFrame {
 
         public void actionPerformed(ActionEvent e) {
             clearWindow();
-            List<WeatherInfo> list;
+            List<WeatherInfo> weatherInfo;
 
             String message;
 
@@ -146,46 +137,29 @@ public class SimpleWeatherGUI extends JFrame {
 
             while (true) {
 
-                try {
-                    try {
-                        if (Integer.parseInt(days) > 3) {
-
-                            message = "Число повинно бути менше або дорівнювати 3";
-                            JOptionPane.showMessageDialog(null, message, "Output", JOptionPane.PLAIN_MESSAGE);
-                            break;
-
-                        } else if (Integer.parseInt(days) <= 0) {
-
-                            message = "Число не повинно дорівнювати 0 або бути відємним";
-                            JOptionPane.showMessageDialog(null, message, "Output", JOptionPane.PLAIN_MESSAGE);
-                            break;
-
-                        }
-                    } catch (NumberFormatException ne) {
-                        if (days.equals("")) {
-                            message = "Поле 'Days' не повинно бути пустим";
-                        } else {
-                            message = "Ви ввели не число в поле 'Days'";
-                        }
-                        JOptionPane.showMessageDialog(null, message, "Output", JOptionPane.PLAIN_MESSAGE);
-                        break;
-                    }
-                    list = weatherParser.parse(LinkBuilder.getParameters(city, days, key));
-                    for (WeatherInfo o : list) {
-                        Button button = new Button(o.date.substring(5, 7) + "-" + o.date.substring(8, 10));
-                        createdButtons.add(button);
-                        button.addActionListener(new ButtonEventListenerWeather(jFrame, createdButtons, createdLabel, o, createdButtons.size() - 1));
-                        button.setBounds(150 + createdButtons.size() * 80, 80, 80, 20);
-                        getContentPane().add(button);
-                    }
-                    revalidate();
-                    repaint();
-
-                } catch (IOException ex) {
-                    message = "Таке місто не існує";
+                if (!days.matches("-?\\d+")) {
+                    message = "Поле days повинно містити числа";
                     JOptionPane.showMessageDialog(null, message, "Output", JOptionPane.PLAIN_MESSAGE);
                     break;
                 }
+
+                if (Integer.parseInt(days) > 3 &&Integer.parseInt(days) <= 0) {
+                    message = "Число повинно бути в діапазоні від 0 до 3 включно";
+                    JOptionPane.showMessageDialog(null, message, "Output", JOptionPane.PLAIN_MESSAGE);
+                    break;
+                }
+
+                weatherInfo = weatherParser.parseWeather(LinkBuilder.buildLink(city, days, key));
+
+                for (WeatherInfo o : weatherInfo) {
+                    Button button = new Button(o.date.substring(5, 7) + "-" + o.date.substring(8, 10));
+                    createdButtons.add(button);
+                    button.addActionListener(new ButtonEventListenerWeather(jFrame, createdButtons, createdLabels, o, createdButtons.size() - 1));
+                    button.setBounds(150 + createdButtons.size() * 80, 80, 80, 20);
+                    getContentPane().add(button);
+                }
+                revalidate();
+                repaint();
                 break;
             }
         }

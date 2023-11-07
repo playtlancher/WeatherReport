@@ -23,6 +23,7 @@ public class TextField extends JTextField {
     private String labelText = "WORK!!!";
     private boolean mouseOver = false;
     private JFrame jFrame;
+    private Font font = new Font("New Times Roman",Font.BOLD,12);
 
     public void setLineColor(Color lineColor) {
         this.lineColor = lineColor;
@@ -42,6 +43,7 @@ public class TextField extends JTextField {
 
 
     public TextField() {
+        setFont(font);
         setBorder(new EmptyBorder(20, 3, 10, 3));
         addMouseListener(new MouseAdapter() {
             @Override
@@ -170,6 +172,7 @@ public class TextField extends JTextField {
         try {
             searchCriteria.setFeatureClass(FeatureClass.fromValue("P"));
             searchCriteria.setCountryCode("UA");
+            searchCriteria.setNameStartsWith(getText());
             searchCriteria.setMaxRows(1000);
         } catch (InvalidParameterException e) {
             e.printStackTrace();
@@ -232,9 +235,11 @@ public class TextField extends JTextField {
 
             @Override
             public void focusGained(FocusEvent e) {
-                suggestionPanel.setVisible(true);
-                revalidate();
-                repaint();
+                if(!getText().equals("")) {
+                    suggestionPanel.setVisible(true);
+                    revalidate();
+                    repaint();
+                }
             }
 
             @Override

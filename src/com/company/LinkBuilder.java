@@ -8,18 +8,21 @@ import java.net.URL;
 
 public class LinkBuilder {
 
-    public static StringBuilder getParameters(String city, String timeKey, String key) throws IOException {
+    public static StringBuilder buildLink(String city, String timeKey, String key){
         String link = "https://api.weatherapi.com/v1";
         StringBuilder responseContent = new StringBuilder();
         String readLine;
         city = city.replace(" ", "");
         link += "/forecast.json" + "?key=" + key + "&q=" + city + "&days=" + timeKey + "&lang=uk";
-        URL url = new URL(link);
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod("GET");
-        BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        while ((readLine = reader.readLine()) != null) {
-            responseContent.append(readLine);
+        try {
+            URL url = new URL(link);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            while ((readLine = reader.readLine()) != null) {
+                responseContent.append(readLine);
+            }
+        }catch (IOException e){
         }
         return responseContent;
     }
