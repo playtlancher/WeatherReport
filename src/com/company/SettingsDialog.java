@@ -23,7 +23,7 @@ class SettingsDialog extends JDialog {
         WeatherParser parser = new WeatherParser();
 
 
-        //Create stuff and set stuff position
+
         JButton changeCityButton = new JButton("Change city");
         TextField changeCityField = new TextField();
         JLabel cityNow = new JLabel("City now:");
@@ -38,13 +38,14 @@ class SettingsDialog extends JDialog {
         cityNowText.setBounds(105, 20, 100, 30);
         errorLabel.setBounds(50, 150, 120, 30);
 
-        //Button event
+
         changeCityButton.addActionListener(e -> {
             String newCity = changeCityField.getText();
-
+            ResponseContentGetter getter = new ResponseContentGetter();
             while (true) {
-
-                boolean check = CityChecker.check(LinkBuilder.buildLink(newCity, "1", "3dd7434243bb4e06933153229230509"));
+                String link = LinkBuilder.buildLink(newCity, "1", "3dd7434243bb4e06933153229230509");
+                StringBuilder response = getter.getResponseContent(link);
+                boolean check = CityChecker.check(response);
                 if (check){break;}
 
                 cityNowText.setText(newCity);

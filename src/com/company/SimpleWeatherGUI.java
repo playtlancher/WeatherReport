@@ -50,8 +50,9 @@ public class SimpleWeatherGUI extends JFrame {
                 break;
             }
         }
-
-        List<WeatherInfo> weatherList = parser.parseWeather(LinkBuilder.buildLink(city, "1", "3dd7434243bb4e06933153229230509"));
+        String link = LinkBuilder.buildLink(city, "1", "3dd7434243bb4e06933153229230509");
+        StringBuilder response = ResponseContentGetter.getResponseContent(link);
+        List<WeatherInfo> weatherList = parser.parseWeather(response);
         ButtonEventListenerWeather belw = new ButtonEventListenerWeather(this, createdButtons, createdLabels, weatherList.get(0));
         belw.actionPerformed(null);
 
@@ -107,8 +108,12 @@ public class SimpleWeatherGUI extends JFrame {
     }
 
     public void clearWindow() {
-        for (JButton jButton : createdButtons) {getContentPane().remove(jButton);}
-        for (JLabel label : createdLabels) {getContentPane().remove(label);}
+        for (JButton jButton : createdButtons) {
+            getContentPane().remove(jButton);
+        }
+        for (JLabel label : createdLabels) {
+            getContentPane().remove(label);
+        }
         createdLabels.clear();
         createdButtons.clear();
         revalidate();
@@ -143,18 +148,19 @@ public class SimpleWeatherGUI extends JFrame {
                     break;
                 }
 
-                if (Integer.parseInt(days) > 3 &&Integer.parseInt(days) <= 0) {
+                if (Integer.parseInt(days) > 3 && Integer.parseInt(days) <= 0) {
                     message = "Число повинно бути в діапазоні від 0 до 3 включно";
                     JOptionPane.showMessageDialog(null, message, "Output", JOptionPane.PLAIN_MESSAGE);
                     break;
                 }
+                String APIlink = LinkBuilder.buildLink(city, days, key);
+                StringBuilder response = ResponseContentGetter.getResponseContent(APIlink);
+                weatherInfo = weatherParser.parseWeather(response);
 
-                weatherInfo = weatherParser.parseWeather(LinkBuilder.buildLink(city, days, key));
-
-                for (WeatherInfo o : weatherInfo) {
-                    Button button = new Button(o.date.substring(5, 7) + "-" + o.date.substring(8, 10));
+                for (WeatherInfo weather : weatherInfo) {
+                    Button button = new Button(weather.date.substring(5, 7) + "-" + weather.date.substring(8, 10));
                     createdButtons.add(button);
-                    button.addActionListener(new ButtonEventListenerWeather(jFrame, createdButtons, createdLabels, o, createdButtons.size() - 1));
+                    button.addActionListener(new ButtonEventListenerWeather(jFrame, createdButtons, createdLabels, weather, createdButtons.size() - 1));
                     button.setBounds(150 + createdButtons.size() * 80, 80, 80, 20);
                     getContentPane().add(button);
                 }
@@ -164,6 +170,6 @@ public class SimpleWeatherGUI extends JFrame {
             }
         }
 
-    }
 
+    }
 }
